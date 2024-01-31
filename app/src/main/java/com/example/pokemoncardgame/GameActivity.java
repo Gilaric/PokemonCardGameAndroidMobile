@@ -28,6 +28,12 @@ public class GameActivity extends AppCompatActivity {
         void onCardsError(String errorMessage);
     }
 
+    public interface DetailedCardsCallback {
+        void onCardsReceived(List<Card> cards);
+        void onCardsError(String errorMessage);
+    }
+
+
     public static RequestQueue requestQueue;
     List<EveryCards> cards;
     List<EveryCards> playerOneCards;
@@ -49,11 +55,24 @@ public class GameActivity extends AppCompatActivity {
             public void onCardsReceived(List<EveryCards> receivedCards) {
                 // Assign Cards to players
                 cards = receivedCards;
+
                 System.out.println("Testing getTenRandomCards()");
                 getTenRandomCards();
-                layoutCards();
+
                 System.out.println("Testing getCard()");
-                getCard();
+                getCard(new DetailedCardsCallback() {
+                    @Override
+                    public void onCardsReceived(List<Card> receivedCards) {
+                        // Now that you have detailedCards, you can pass it to layoutCards
+                        layoutCards(receivedCards);
+                    }
+
+                    @Override
+                    public void onCardsError(String errorMessage) {
+                        // Handle error, show a message, etc.
+                        Log.e("Cards", errorMessage);
+                    }
+                });
             }
 
             @Override
@@ -63,6 +82,8 @@ public class GameActivity extends AppCompatActivity {
             }
         });
     }
+
+
 
     private void initGui() {
 
@@ -89,57 +110,82 @@ public class GameActivity extends AppCompatActivity {
         requestQueue.add(request);
     }
 
-    private void layoutCards() {
+    private void layoutCards(List<Card> detailedCards) {
+        System.out.println("\n\nStarting layoutCards method! \n\n");
         // LinearLayOut Setup
-        LinearLayout linearLayout= new LinearLayout(this);
+        LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.setOrientation(LinearLayout.VERTICAL);
 
-        linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.
-                LayoutParams.MATCH_PARENT,
+        linearLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT)
         );
-        //ImageView Setup
-        ImageView imageView = new ImageView(this);
 
-        // Setting image resource
-        // Url with card stuff.
-        /*Picasso.get().load(detailedCards)
-                .resize(50,50)
-                .into(imageView);
-        */
+        if (detailedCards == null)
+        {
+            System.err.println("\ndetailedCards is null. Returning!\n");
+            return;
+        }
+        else {
+            System.out.println("\ndetailedCards is populated!\n");
+            for (int i = 0; i < 2; i++) {
+                //ImageView Setup
+                ImageView imageView = new ImageView(this);
 
-        //setting image position
-        imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.
-                LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-        );
+                // Setting image resource
+                Card card = detailedCards.get(i);
 
-        //adding view to layout
-        linearLayout.addView(imageView);
+                System.out.println("Card: " + card.name);
+                System.out.println("Card URL: " + card.image);
+                Picasso.get().load(card.getImageUrl() +"/low.png")
+                        .resize(600, 900)
+                        .into(imageView);
+
+                // setting image position
+                imageView.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT)
+                );
+
+
+                //adding view to layout
+                linearLayout.addView(imageView);
+            }
+        }
 
         //make visible to program
         setContentView(linearLayout);
     }
 
-    private void getCard() {
+    private void getCard(DetailedCardsCallback callback) {
+        System.out.println("getCard method. ");
         List<EveryCards> allPlayerCards = new ArrayList<>(playerOneCards);
         allPlayerCards.addAll(playerTwoCards);
 
         // Initialize detailedCards list
         detailedCards = new ArrayList<>();
 
-        for (EveryCards  card : allPlayerCards)
-        {
+        int[] cardsProcessed = {0};  // Using an array to make it effectively final
+
+        for (EveryCards card : allPlayerCards) {
             String cardId = card.id;
 
             String url = "https://api.tcgdex.net/v2/en/cards/" + cardId;
 
             StringRequest request = new StringRequest(Request.Method.GET, url, response -> {
-                Card detailedCard  = new Gson().fromJson(response, Card.class);
+                Card detailedCard = new Gson().fromJson(response, Card.class);
 
                 detailedCards.add(detailedCard);
 
-                System.out.println("Card: "+ detailedCard.name);
+                System.out.println("Card: " + detailedCard.name);
+                System.out.println("Card URL: " + detailedCard.getImageUrl());
+
+                cardsProcessed[0]++;
+
+                if (cardsProcessed[0] == allPlayerCards.size()) {
+                    // Call the callback when all detailed cards are fetched
+                    callback.onCardsReceived(detailedCards);
+                }
 
             }, error -> Toast.makeText(this, error.toString(), Toast.LENGTH_LONG).show()
             );
@@ -147,6 +193,7 @@ public class GameActivity extends AppCompatActivity {
             requestQueue.add(request);
         }
     }
+
 
     public void getTenRandomCards() {
         System.out.println("Testing getTenRandomCards()");
