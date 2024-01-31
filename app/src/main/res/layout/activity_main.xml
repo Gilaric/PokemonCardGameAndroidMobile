@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:orientation="vertical"
+    >
+    <LinearLayout
+        android:id="@+id/ll_searchbar"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        >
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="32dp"
+            android:text="PokAMum Card Game"
+            android:textSize="20sp"
+            android:textColor="@color/black"
+            android:gravity="center"
+
+            />
+
+        <ImageView
+            android:id="@+id/iv_main_menu_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            />
+
+        <Button
+            android:id="@+id/btn_start_game"
+            android:layout_width="132dp"
+            android:layout_height="wrap_content"
+            android:text="Start game"
+            android:layout_gravity="center"
+            />
+
+        <Button
+            android:id="@+id/btn_options"
+            android:layout_width="132dp"
+            android:layout_height="wrap_content"
+            android:text="Options"
+            android:layout_gravity="center"
+            />
+
+    </LinearLayout>
+</LinearLayout>
