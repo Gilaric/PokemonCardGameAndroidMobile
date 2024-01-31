@@ -103,9 +103,10 @@ public class GameActivity extends AppCompatActivity {
 
         // Setting image resource
         // Url with card stuff.
-        Picasso.get().load(detailedCards)
+        /*Picasso.get().load(detailedCards)
                 .resize(50,50)
                 .into(imageView);
+        */
 
         //setting image position
         imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.
