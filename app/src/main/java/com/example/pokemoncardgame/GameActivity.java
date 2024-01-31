@@ -2,7 +2,6 @@ package com.example.pokemoncardgame;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -23,16 +22,17 @@ import java.util.Random;
 
 public class GameActivity extends AppCompatActivity {
 
+    // Interface for handling card callbacks
     public interface CardsCallback {
         void onCardsReceived(List<EveryCards> cards);
         void onCardsError(String errorMessage);
     }
 
+    // Interface for handling detailed card callbacks
     public interface DetailedCardsCallback {
         void onCardsReceived(List<Card> cards);
         void onCardsError(String errorMessage);
     }
-
 
     public static RequestQueue requestQueue;
     List<EveryCards> cards;
@@ -47,19 +47,20 @@ public class GameActivity extends AppCompatActivity {
 
         initGui();
 
+        // Initialize Volley request queue
         requestQueue = Volley.newRequestQueue(this);
 
-        // Cards should now be filled.
+        // Fetch all cards
         getAllCards(new CardsCallback() {
             @Override
             public void onCardsReceived(List<EveryCards> receivedCards) {
-                // Assign Cards to players
+                // Assign received cards to the global cards list
                 cards = receivedCards;
 
-                System.out.println("Testing getTenRandomCards()");
+                // Fetch ten random cards for two players
                 getTenRandomCards();
 
-                System.out.println("Testing getCard()");
+                // Fetch detailed information for each card
                 getCard(new DetailedCardsCallback() {
                     @Override
                     public void onCardsReceived(List<Card> receivedCards) {
@@ -83,16 +84,17 @@ public class GameActivity extends AppCompatActivity {
         });
     }
 
-
-
+    // Initialize GUI components (if any)
     private void initGui() {
-
+        // Add initialization code for GUI components if needed
     }
 
+    // Fetch all cards from the API
     private void getAllCards(CardsCallback callback) {
         String url = "https://api.tcgdex.net/v2/en/cards";
 
         StringRequest request = new StringRequest(Request.Method.GET, url, response -> {
+            // Parse the JSON response using Gson
             cards = new Gson().fromJson(response, new TypeToken<List<EveryCards>>(){}.getType());
 
             if (cards != null) {
@@ -110,6 +112,7 @@ public class GameActivity extends AppCompatActivity {
         requestQueue.add(request);
     }
 
+    // Display the card images in the layout
     private void layoutCards(List<Card> detailedCards) {
         System.out.println("\n\nStarting layoutCards method! \n\n");
         // LinearLayOut Setup
@@ -137,8 +140,9 @@ public class GameActivity extends AppCompatActivity {
 
                 System.out.println("Card: " + card.name);
                 System.out.println("Card URL: " + card.image);
-                Picasso.get().load(card.getImageUrl() +"/low.png")
-                        .resize(600, 900)
+                // Loading the image using Picasso library and appending "/low.jpg" to the URL
+                Picasso.get().load(card.getImageUrl() + "/low.jpg")
+                        .resize(800, 1100)
                         .into(imageView);
 
                 // setting image position
@@ -147,16 +151,16 @@ public class GameActivity extends AppCompatActivity {
                         LinearLayout.LayoutParams.WRAP_CONTENT)
                 );
 
-
                 //adding view to layout
                 linearLayout.addView(imageView);
             }
         }
 
-        //make visible to program
+        // make visible to program
         setContentView(linearLayout);
     }
 
+    // Fetch detailed information for each card
     private void getCard(DetailedCardsCallback callback) {
         System.out.println("getCard method. ");
         List<EveryCards> allPlayerCards = new ArrayList<>(playerOneCards);
@@ -173,6 +177,7 @@ public class GameActivity extends AppCompatActivity {
             String url = "https://api.tcgdex.net/v2/en/cards/" + cardId;
 
             StringRequest request = new StringRequest(Request.Method.GET, url, response -> {
+                // Parse the detailed card information using Gson
                 Card detailedCard = new Gson().fromJson(response, Card.class);
 
                 detailedCards.add(detailedCard);
@@ -194,7 +199,7 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-
+    // Select random cards for two players
     public void getTenRandomCards() {
         System.out.println("Testing getTenRandomCards()");
 
@@ -232,8 +237,48 @@ public class GameActivity extends AppCompatActivity {
             }
         }
     }
-    public void battleCards()
-    {
-        //TODO Get stats of 1 card for each player.
+
+    // TODO: Implement the logic to get stats of 1 card for each player in the battleCards method
+    /*
+    public void battleCards() {
+
+        if (playerOneCards.size() < 1 || playerTwoCards.size() < 1) {
+            // Ensure both players have at least one card
+            return;
+        }
+
+        // Assume we are battling the first card of each player for simplicity
+        Card playerOneCard = detailedCards.get(0);  // Change this based on your logic
+        Card playerTwoCard = detailedCards.get(1);  // Change this based on your logic
+
+        // Extract attack and HP stats
+        int playerOneAttack = playerOneCard.getAttack();
+        int playerTwoAttack = playerTwoCard.getAttack();
+
+        int playerOneHP = playerOneCard.getHP();
+        int playerTwoHP = playerTwoCard.getHP();
+
+        // Simulate the battle
+        while (playerOneHP > 0 && playerTwoHP > 0) {
+            // Player One attacks Player Two
+            playerTwoHP -= playerOneAttack;
+
+            // Player Two attacks Player One
+            playerOneHP -= playerTwoAttack;
+        }
+
+        // Determine the winner
+        String winner;
+        if (playerOneHP <= 0 && playerTwoHP <= 0) {
+            winner = "It's a draw!";
+        } else if (playerOneHP <= 0) {
+            winner = "Player Two wins!";
+        } else {
+            winner = "Player One wins!";
+        }
+
+        // Display the result
+        Toast.makeText(this, winner, Toast.LENGTH_LONG).show();
     }
+    */
 }
