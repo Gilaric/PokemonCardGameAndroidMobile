@@ -3,6 +3,8 @@ package com.example.pokemoncardgame;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,6 +15,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +51,7 @@ public class GameActivity extends AppCompatActivity {
                 cards = receivedCards;
                 System.out.println("Testing getTenRandomCards()");
                 getTenRandomCards();
+                layoutCards();
                 System.out.println("Testing getCard()");
                 getCard();
             }
@@ -85,10 +89,35 @@ public class GameActivity extends AppCompatActivity {
         requestQueue.add(request);
     }
 
-    private void onCardsReceived() {
-        // Cards are available, proceed with the next steps
-        getTenRandomCards();
-        System.out.println("Testing!!!!");
+    private void layoutCards() {
+        // LinearLayOut Setup
+        LinearLayout linearLayout= new LinearLayout(this);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.
+                LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT)
+        );
+        //ImageView Setup
+        ImageView imageView = new ImageView(this);
+
+        // Setting image resource
+        // Url with card stuff.
+        Picasso.get().load(detailedCards)
+                .resize(50,50)
+                .into(imageView);
+
+        //setting image position
+        imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.
+                LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
+        );
+
+        //adding view to layout
+        linearLayout.addView(imageView);
+
+        //make visible to program
+        setContentView(linearLayout);
     }
 
     private void getCard() {

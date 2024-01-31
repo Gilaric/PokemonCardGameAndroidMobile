@@ -7,6 +7,9 @@ public class Card {
     public String id;
     public String illustrator;
     public String image;
+    public String getImageUrl() {
+        return image;
+    }
     public String localId;
     public String name;
     public String rarity;
