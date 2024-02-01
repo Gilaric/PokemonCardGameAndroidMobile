@@ -329,68 +329,89 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         int newAttackDamageValue = 0;
 
         int playerOneHP = playerOneCard.hp;
-        int playerTwoHP = playerTwoCard.hp;;
+        int playerTwoHP = playerTwoCard.hp;
 
-        // Simulate the battle
-        while (playerOneHP > 0 && playerTwoHP > 0) {
-            for (Attack attack : playerOneCard.attacks) {
-                if (attack.damage == null)
-                {
-                    System.out.println("Damage is null, skipping card. ");
-                    playerOneCard = playerOneDetailedCards.get(playerOneCardNumber++);
-                    Picasso.get().load(playerOneCard.image + "/low.jpg")
-                            .resize(200, 400)
-                            .into(playerOneImageView);
-                    battleCounterP1++;
-                }
-                else if (playerTwoHP > 0)  {
-                    String cleanedDamageValue = attack.damage.trim()
-                            .replaceAll("[-+]", "");
-                    newAttackDamageValue = Integer.parseInt(cleanedDamageValue);
-                    playerOneAttack = newAttackDamageValue;
-                    System.out.println(playerOneCard.name + " Assigning attackValue " + playerOneAttack);
-                    playerTwoHP -= playerOneAttack;
-                    System.out.println("playerTwoHP after attack: " + playerTwoHP);
+        do {
+            System.out.println("playerOneCard: " + playerOneCard);
+            System.out.println("playerOneCard.attacks: " + playerOneCard.attacks);
+            if (playerOneCard.attacks == null)
+            {
+                System.out.println("No attacks, skipping card. ");
+                playerOneCard = playerOneDetailedCards.get(playerOneCardNumber++);
+                Picasso.get().load(playerOneCard.image + "/low.jpg")
+                        .resize(200, 400)
+                        .into(playerOneImageView);
+                battleCounterP1++;
+            }
+            else {
+                for (Attack attack : playerOneCard.attacks) {
+                    if (attack.damage == null) {
+                        System.out.println("Damage is null, skipping card. ");
+                        playerOneCard = playerOneDetailedCards.get(playerOneCardNumber++);
+                        Picasso.get().load(playerOneCard.image + "/low.jpg")
+                                .resize(200, 400)
+                                .into(playerOneImageView);
+                        battleCounterP1++;
+                    } else if (playerTwoHP > 0) {
+                        String cleanedDamageValue = attack.damage.trim().replaceAll("[-+]", "");
+                        newAttackDamageValue = Integer.parseInt(cleanedDamageValue);
+                        playerOneAttack = newAttackDamageValue;
+                        System.out.println(playerOneCard.name + " Assigning attackValue " + playerOneAttack);
+                        playerTwoHP -= playerOneAttack;
+                        System.out.println("playerTwoHP after attack: " + playerTwoHP);
+                    }
                 }
             }
 
-            for (Attack attack : playerTwoCard.attacks) {
-                if (attack.damage == null)
-                {
-                    System.out.println("Damage is null, skipping card. ");
-                    playerTwoCard = playerTwoDetailedCards.get(playerTwoCardNumber++);  // Change this based on your logic
-                    Picasso.get().load(playerTwoCard.image + "/low.jpg")
-                            .resize(200, 400)
-                            .into(playerTwoImageView);
-                    battleCounterP2++;
-                }
-                else if (playerOneHP > 0) {
-                    String cleanedDamageValue = attack.damage.trim()
-                            .replaceAll("[-+]", "");
-                    newAttackDamageValue = Integer.parseInt(cleanedDamageValue);
-                    playerTwoAttack = newAttackDamageValue;
-                    System.out.println(playerTwoCard.name + " Assigning attackValue: " + playerTwoAttack);
-                    playerOneHP -= playerTwoAttack;
-                    System.out.println("playerOneHP" + playerOneHP);
+
+            System.out.println("playerTwoCard: " + playerTwoCard);
+            System.out.println("playerTwoCard.attacks: " + playerTwoCard.attacks);
+            if (playerTwoCard.attacks == null)
+            {
+                System.out.println("No attacks, skipping card. ");
+                playerTwoCard = playerOneDetailedCards.get(playerOneCardNumber++);
+                Picasso.get().load(playerTwoCard.image + "/low.jpg")
+                        .resize(200, 400)
+                        .into(playerOneImageView);
+                battleCounterP2++;
+            }
+            else
+            {
+                for (Attack attack : playerTwoCard.attacks) {
+                    if (attack.damage == null) {
+                        System.out.println("Damage is null, skipping card. ");
+                        playerTwoCard = playerTwoDetailedCards.get(playerTwoCardNumber++);  // Change this based on your logic
+                        Picasso.get().load(playerTwoCard.image + "/low.jpg")
+                                .resize(200, 400)
+                                .into(playerTwoImageView);
+                        battleCounterP2++;
+                    } else if (playerOneHP > 0) {
+                        String cleanedDamageValue = attack.damage.trim().replaceAll("[-+]", "");
+                        newAttackDamageValue = Integer.parseInt(cleanedDamageValue);
+                        playerTwoAttack = newAttackDamageValue;
+                        System.out.println(playerTwoCard.name + " Assigning attackValue: " + playerTwoAttack);
+                        playerOneHP -= playerTwoAttack;
+                        System.out.println("playerOneHP" + playerOneHP);
+                    }
                 }
             }
-        }
+
+        } while (playerOneHP > 0 && playerTwoHP > 0);
 
         // Determine the winner
         String winner;
         if (playerOneHP <= 0 && playerTwoHP <= 0) {
             winner = "It's a draw!";
             System.out.println(winner);
+            System.out.println(battleCounterP1);
             battleCounterP1++;
             battleCounterP2++;
-        }
-        else if (playerOneHP >= 1 && playerTwoHP < 1) {
+        } else if (playerOneHP >= 1 && playerTwoHP < 1) {
             winner = "Player one wins!";
             System.out.println(winner);
             battleCounterP1++;
             battleCounterP2++;
-        }
-        else if (playerTwoHP >= 1 && playerTwoHP < 1){
+        } else if (playerTwoHP >= 1 && playerTwoHP < 1) {
             winner = "Player Two wins!";
             System.out.println(winner);
             battleCounterP1++;
