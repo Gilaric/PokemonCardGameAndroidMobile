@@ -41,6 +41,8 @@ public class GameActivity extends AppCompatActivity {
     List<Card> detailedCards;
     ImageView playerOneImageView;
     ImageView playerTwoImageView;
+    int playerOneCardNumber;
+    int playerTwoCardNumber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +69,6 @@ public class GameActivity extends AppCompatActivity {
                     @Override
                     public void onCardsReceived(List<Card> receivedCards) {
                         // Now that you have detailedCards, you can pass it to layoutCards
-                        layoutCards(0,0);
                         battleCards();
                     }
 
@@ -117,7 +118,12 @@ public class GameActivity extends AppCompatActivity {
         requestQueue.add(request);
     }
 
-    // Display the card images in the layout
+    public void getCardImage()
+    {
+
+    }
+
+/*    // Display the card images in the layout
     private void layoutCards(int playerOneId, int playerTwoId) {
         if (detailedCards == null)
         {
@@ -141,7 +147,7 @@ public class GameActivity extends AppCompatActivity {
             System.out.println("\ndetailedCards is populated!\n");
 
         }
-    }
+    }*/
 
     // Fetch detailed information for each card
     private void getCard(DetailedCardsCallback callback) {
@@ -169,7 +175,7 @@ public class GameActivity extends AppCompatActivity {
                 detailedCards.add(detailedCard);
 
                 System.out.println("Card: " + detailedCard.name);
-                System.out.println("Card URL: " + detailedCard.getImageUrl());
+                System.out.println("Card URL: " + detailedCard.image);
 
                 cardsProcessed[0]++;
 
@@ -238,6 +244,14 @@ public class GameActivity extends AppCompatActivity {
         Card playerOneCard = detailedCards.get(0);  // Change this based on your logic
         Card playerTwoCard = detailedCards.get(0);  // Change this based on your logic
 
+        Picasso.get().load(playerOneCard.image + "/low.jpg")
+                .resize(200, 400)
+                .into(playerOneImageView);
+
+        Picasso.get().load(playerTwoCard.image + "/low.jpg")
+                .resize(200, 400)
+                .into(playerTwoImageView);
+
         int playerOneAttack = 0;
         int playerTwoAttack = 0;
 
@@ -246,8 +260,6 @@ public class GameActivity extends AppCompatActivity {
         int playerOneHP = playerOneCard.hp;
         int playerTwoHP = playerOneCard.hp;;
 
-        int playerOneCardNumber = 0;
-        int playerTwoCardNumber = 0;
         // Simulate the battle
         while (playerOneHP > 0 && playerTwoHP > 0) {
             for (Attack attack : playerOneCard.attacks) {
@@ -255,7 +267,9 @@ public class GameActivity extends AppCompatActivity {
                 {
                     System.out.println("Damage is null, skipping card. ");
                     playerOneCard = detailedCards.get(playerOneCardNumber++);
-                    layoutCards(playerOneCardNumber, playerTwoCardNumber);// Change this based on your logic
+                    Picasso.get().load(playerOneCard.image + "/low.jpg")
+                            .resize(200, 400)
+                            .into(playerOneImageView);
                 }
                 else if (playerTwoHP > 0)  {
                     String cleanedDamageValue = attack.damage.trim()
@@ -273,7 +287,9 @@ public class GameActivity extends AppCompatActivity {
                 {
                     System.out.println("Damage is null, skipping card. ");
                     playerTwoCard = detailedCards.get(playerTwoCardNumber++);  // Change this based on your logic
-                    layoutCards(playerOneCardNumber, playerTwoCardNumber);
+                    Picasso.get().load(playerTwoCard.image + "/low.jpg")
+                            .resize(200, 400)
+                            .into(playerTwoImageView);
                 }
                 else if (playerOneHP > 0) {
                     String cleanedDamageValue = attack.damage.trim()
