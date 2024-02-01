@@ -38,7 +38,8 @@ public class GameActivity extends AppCompatActivity {
     List<EveryCards> cards;
     List<EveryCards> playerOneCards;
     List<EveryCards> playerTwoCards;
-    List<Card> detailedCards;
+    List<Card> playerOneDetailedCards;
+    List<Card> playerTwoDetailedCards;
     ImageView playerOneImageView;
     ImageView playerTwoImageView;
     int playerOneCardNumber;
@@ -152,15 +153,16 @@ public class GameActivity extends AppCompatActivity {
     // Fetch detailed information for each card
     private void getCard(DetailedCardsCallback callback) {
         System.out.println("getCard method. ");
-        List<EveryCards> allPlayerCards = new ArrayList<>(playerOneCards);
-        allPlayerCards.addAll(playerTwoCards);
+        List<EveryCards> everyPlayerOneCards = new ArrayList<>(playerOneCards);
+        List<EveryCards> everyPlayerTwoCards = new ArrayList<>(playerTwoCards);
 
         // Initialize detailedCards list
-        detailedCards = new ArrayList<>();
+        playerOneDetailedCards = new ArrayList<>();
+        playerTwoDetailedCards = new ArrayList<>();
 
         int[] cardsProcessed = {0};  // Using an array to make it effectively final
 
-        for (EveryCards card : allPlayerCards) {
+        for (EveryCards card : everyPlayerOneCards) {
             String cardId = card.id;
 
             String url = "https://api.tcgdex.net/v2/en/cards/" + cardId;
@@ -172,16 +174,16 @@ public class GameActivity extends AppCompatActivity {
                 System.out.println("detailedCard category: " + detailedCard.category);
                 System.out.println("Adding card: " + detailedCard);
 
-                detailedCards.add(detailedCard);
+                playerOneDetailedCards.add(detailedCard);
 
                 System.out.println("Card: " + detailedCard.name);
                 System.out.println("Card URL: " + detailedCard.image);
 
                 cardsProcessed[0]++;
 
-                if (cardsProcessed[0] == allPlayerCards.size()) {
+                if (cardsProcessed[0] == everyPlayerOneCards.size()) {
                     // Call the callback when all detailed cards are fetched
-                    callback.onCardsReceived(detailedCards);
+                    callback.onCardsReceived(playerOneDetailedCards);
                 }
 
             }, error -> Toast.makeText(this, error.toString(), Toast.LENGTH_LONG).show()
@@ -241,8 +243,8 @@ public class GameActivity extends AppCompatActivity {
         }
 
         // Assume we are battling the first card of each player for simplicity
-        Card playerOneCard = detailedCards.get(0);  // Change this based on your logic
-        Card playerTwoCard = detailedCards.get(0);  // Change this based on your logic
+        Card playerOneCard = playerOneDetailedCards.get(0);  // Change this based on your logic
+        Card playerTwoCard = playerTwoDetailedCards.get(0);  // Change this based on your logic
 
         Picasso.get().load(playerOneCard.image + "/low.jpg")
                 .resize(200, 400)
@@ -266,7 +268,7 @@ public class GameActivity extends AppCompatActivity {
                 if (attack.damage == null)
                 {
                     System.out.println("Damage is null, skipping card. ");
-                    playerOneCard = detailedCards.get(playerOneCardNumber++);
+                    playerOneCard = playerOneDetailedCards.get(playerOneCardNumber++);
                     Picasso.get().load(playerOneCard.image + "/low.jpg")
                             .resize(200, 400)
                             .into(playerOneImageView);
@@ -286,7 +288,7 @@ public class GameActivity extends AppCompatActivity {
                 if (attack.damage == null)
                 {
                     System.out.println("Damage is null, skipping card. ");
-                    playerTwoCard = detailedCards.get(playerTwoCardNumber++);  // Change this based on your logic
+                    playerTwoCard = playerTwoDetailedCards.get(playerTwoCardNumber++);  // Change this based on your logic
                     Picasso.get().load(playerTwoCard.image + "/low.jpg")
                             .resize(200, 400)
                             .into(playerTwoImageView);
