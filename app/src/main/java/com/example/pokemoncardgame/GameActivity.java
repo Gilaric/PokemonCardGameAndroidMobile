@@ -1,9 +1,13 @@
 package com.example.pokemoncardgame;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity implements View.OnClickListener{
 
     // Interface for handling card callbacks
     public interface CardsCallback {
@@ -30,7 +34,7 @@ public class GameActivity extends AppCompatActivity {
 
     // Interface for handling detailed card callbacks
     public interface DetailedCardsCallback {
-        void onCardsReceived(List<Card> cards);
+        void onCardsReceived(List<Card> playerOneCards, List<Card> playerTwoCards);
         void onCardsError(String errorMessage);
     }
 
@@ -42,8 +46,14 @@ public class GameActivity extends AppCompatActivity {
     List<Card> playerTwoDetailedCards;
     ImageView playerOneImageView;
     ImageView playerTwoImageView;
+    Button btn_next_battle;
+    Button btn_return_to_main_menu;
+    TextView tv_playerOne_score_counter;
+    TextView tv_playerTwo_score_counter;
     int playerOneCardNumber;
     int playerTwoCardNumber;
+    int battleCounterP1;
+    int battleCounterP2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,8 +62,14 @@ public class GameActivity extends AppCompatActivity {
 
         initGui();
 
+
+
         // Initialize Volley request queue
         requestQueue = Volley.newRequestQueue(this);
+
+        btn_next_battle.setOnClickListener(this);
+
+        btn_return_to_main_menu.setOnClickListener(this::goToMainMenu);
 
         // Fetch all cards
         getAllCards(new CardsCallback() {
@@ -68,9 +84,10 @@ public class GameActivity extends AppCompatActivity {
                 // Fetch detailed information for each card
                 getCard(new DetailedCardsCallback() {
                     @Override
-                    public void onCardsReceived(List<Card> receivedCards) {
-                        // Now that you have detailedCards, you can pass it to layoutCards
-                        battleCards();
+                    public void onCardsReceived(List<Card> playerOneCards, List<Card> playerTwoCards) {
+                        // Now that you have detailedCards for both players, you can use them
+                        // in your logic, such as displaying images and battling cards.
+                        battleCards(battleCounterP1, battleCounterP2);
                     }
 
                     @Override
@@ -87,6 +104,17 @@ public class GameActivity extends AppCompatActivity {
                 Log.e("Cards", errorMessage);
             }
         });
+
+    }
+
+    private void goToMainMenu(View gameActivity) {
+        Intent mainIntent = new Intent(gameActivity.getContext(),MainActivity.class);
+        startActivity(mainIntent);
+    }
+
+    @Override
+    public void onClick(View view) {
+        battleCards(battleCounterP1, battleCounterP2);
     }
 
     // Initialize GUI components (if any)
@@ -94,6 +122,8 @@ public class GameActivity extends AppCompatActivity {
         // Add initialization code for GUI components if needed
         playerOneImageView = findViewById(R.id.iv_playerOneCard);
         playerTwoImageView = findViewById(R.id.iv_playerTwoCard);
+        btn_next_battle = findViewById(R.id.btn_next_battle);
+        btn_return_to_main_menu = findViewById(R.id.btn_return_home);
     }
 
     // Fetch all cards from the API
@@ -180,18 +210,57 @@ public class GameActivity extends AppCompatActivity {
                 System.out.println("Card URL: " + detailedCard.image);
 
                 cardsProcessed[0]++;
+                System.out.println(cardsProcessed[0]);
 
-                if (cardsProcessed[0] == everyPlayerOneCards.size()) {
+                // Check the condition when all detailed cards are fetched
+                if (cardsProcessed[0] == everyPlayerOneCards.size() + everyPlayerTwoCards.size()) {
+                    System.out.println("Callbacking");
                     // Call the callback when all detailed cards are fetched
-                    callback.onCardsReceived(playerOneDetailedCards);
+                    callback.onCardsReceived(playerOneDetailedCards, playerTwoDetailedCards);
                 }
 
-            }, error -> Toast.makeText(this, error.toString(), Toast.LENGTH_LONG).show()
-            );
+            }, error -> {
+                Toast.makeText(this, error.toString(), Toast.LENGTH_LONG).show();
+            });
+
+            requestQueue.add(request);
+        }
+
+        for (EveryCards card : everyPlayerTwoCards) {
+            String cardId = card.id;
+
+            String url = "https://api.tcgdex.net/v2/en/cards/" + cardId;
+
+            StringRequest request = new StringRequest(Request.Method.GET, url, response -> {
+                // Parse the detailed card information using Gson
+                Card detailedCard = new Gson().fromJson(response, Card.class);
+
+                System.out.println("detailedCard category: " + detailedCard.category);
+                System.out.println("Adding card: " + detailedCard);
+
+                playerTwoDetailedCards.add(detailedCard);
+
+                System.out.println("Card: " + detailedCard.name);
+                System.out.println("Card URL: " + detailedCard.image);
+
+                cardsProcessed[0]++;
+                System.out.println(cardsProcessed[0]);
+
+                // Check the condition when all detailed cards are fetched
+                if (cardsProcessed[0] == everyPlayerOneCards.size() + everyPlayerTwoCards.size()) {
+                    System.out.println("Callbacking");
+                    // Call the callback when all detailed cards are fetched
+                    callback.onCardsReceived(playerOneDetailedCards, playerTwoDetailedCards);
+                }
+
+            }, error -> {
+                Toast.makeText(this, error.toString(), Toast.LENGTH_LONG).show();
+            });
 
             requestQueue.add(request);
         }
     }
+
 
     // Select random cards for two players
     public void getTenRandomCards() {
@@ -234,7 +303,7 @@ public class GameActivity extends AppCompatActivity {
 
     // TODO: Implement the logic to get stats of 1 card for each player in the battleCards method
 
-    public void battleCards() {
+    public void battleCards(int battleCounterP1, int battleCounterP2) {
         System.out.println("\n\nStarting battleCards()\n\n");
 
         if (playerOneCards.size() <= 1 || playerTwoCards.size() <= 1) {
@@ -243,8 +312,8 @@ public class GameActivity extends AppCompatActivity {
         }
 
         // Assume we are battling the first card of each player for simplicity
-        Card playerOneCard = playerOneDetailedCards.get(0);  // Change this based on your logic
-        Card playerTwoCard = playerTwoDetailedCards.get(0);  // Change this based on your logic
+        Card playerOneCard = playerOneDetailedCards.get(battleCounterP1);  // Change this based on your logic
+        Card playerTwoCard = playerTwoDetailedCards.get(battleCounterP2);  // Change this based on your logic
 
         Picasso.get().load(playerOneCard.image + "/low.jpg")
                 .resize(200, 400)
@@ -260,7 +329,7 @@ public class GameActivity extends AppCompatActivity {
         int newAttackDamageValue = 0;
 
         int playerOneHP = playerOneCard.hp;
-        int playerTwoHP = playerOneCard.hp;;
+        int playerTwoHP = playerTwoCard.hp;;
 
         // Simulate the battle
         while (playerOneHP > 0 && playerTwoHP > 0) {
@@ -272,6 +341,7 @@ public class GameActivity extends AppCompatActivity {
                     Picasso.get().load(playerOneCard.image + "/low.jpg")
                             .resize(200, 400)
                             .into(playerOneImageView);
+                    battleCounterP1++;
                 }
                 else if (playerTwoHP > 0)  {
                     String cleanedDamageValue = attack.damage.trim()
@@ -280,7 +350,7 @@ public class GameActivity extends AppCompatActivity {
                     playerOneAttack = newAttackDamageValue;
                     System.out.println(playerOneCard.name + " Assigning attackValue " + playerOneAttack);
                     playerTwoHP -= playerOneAttack;
-                    System.out.println("playerTwoHP after attack" + playerTwoHP);
+                    System.out.println("playerTwoHP after attack: " + playerTwoHP);
                 }
             }
 
@@ -292,13 +362,14 @@ public class GameActivity extends AppCompatActivity {
                     Picasso.get().load(playerTwoCard.image + "/low.jpg")
                             .resize(200, 400)
                             .into(playerTwoImageView);
+                    battleCounterP2++;
                 }
                 else if (playerOneHP > 0) {
                     String cleanedDamageValue = attack.damage.trim()
                             .replaceAll("[-+]", "");
                     newAttackDamageValue = Integer.parseInt(cleanedDamageValue);
                     playerTwoAttack = newAttackDamageValue;
-                    System.out.println(playerTwoCard.name + " Assigning attackValue " + playerTwoAttack);
+                    System.out.println(playerTwoCard.name + " Assigning attackValue: " + playerTwoAttack);
                     playerOneHP -= playerTwoAttack;
                     System.out.println("playerOneHP" + playerOneHP);
                 }
@@ -309,17 +380,21 @@ public class GameActivity extends AppCompatActivity {
         String winner;
         if (playerOneHP <= 0 && playerTwoHP <= 0) {
             winner = "It's a draw!";
+            System.out.println(winner);
+            battleCounterP1++;
+            battleCounterP2++;
         }
-        else if (playerOneHP <= 0) {
+        else if (playerOneHP >= 1 && playerTwoHP < 1) {
+            winner = "Player one wins!";
+            System.out.println(winner);
+            battleCounterP1++;
+            battleCounterP2++;
+        }
+        else if (playerTwoHP >= 1 && playerTwoHP < 1){
             winner = "Player Two wins!";
             System.out.println(winner);
+            battleCounterP1++;
+            battleCounterP2++;
         }
-        else {
-            winner = "Player One wins!";
-            System.out.println(winner);
-        }
-
-        // Display the result
-        Toast.makeText(this, winner, Toast.LENGTH_LONG).show();
     }
 }
