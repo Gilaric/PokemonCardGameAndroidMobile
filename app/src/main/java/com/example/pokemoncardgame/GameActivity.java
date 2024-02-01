@@ -62,8 +62,6 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
         initGui();
 
-
-
         // Initialize Volley request queue
         requestQueue = Volley.newRequestQueue(this);
 
@@ -87,7 +85,9 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                     public void onCardsReceived(List<Card> playerOneCards, List<Card> playerTwoCards) {
                         // Now that you have detailedCards for both players, you can use them
                         // in your logic, such as displaying images and battling cards.
+                        System.out.println("Battle counters: " + battleCounterP1 + ", " + battleCounterP2);
                         battleCards(battleCounterP1, battleCounterP2);
+
                     }
 
                     @Override
@@ -306,8 +306,15 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     public void battleCards(int battleCounterP1, int battleCounterP2) {
         System.out.println("\n\nStarting battleCards()\n\n");
 
-        if (playerOneCards.size() <= 1 || playerTwoCards.size() <= 1) {
+        if (playerOneDetailedCards.size() <= 0 || playerTwoDetailedCards.size() <= 0) {
             // Ensure both players have at least one card
+            System.out.println("Not enough cards to battle.");
+            return;
+        }
+
+        if (battleCounterP1 >= playerOneDetailedCards.size() || battleCounterP2 >= playerTwoDetailedCards.size()) {
+            // No more cards to battle
+            System.out.println("No more cards to battle. The game has ended.");
             return;
         }
 
@@ -334,16 +341,14 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         do {
             System.out.println("playerOneCard: " + playerOneCard);
             System.out.println("playerOneCard.attacks: " + playerOneCard.attacks);
-            if (playerOneCard.attacks == null)
-            {
+            if (playerOneCard.attacks == null) {
                 System.out.println("No attacks, skipping card. ");
                 playerOneCard = playerOneDetailedCards.get(playerOneCardNumber++);
                 Picasso.get().load(playerOneCard.image + "/low.jpg")
                         .resize(200, 400)
                         .into(playerOneImageView);
                 battleCounterP1++;
-            }
-            else {
+            } else {
                 for (Attack attack : playerOneCard.attacks) {
                     if (attack.damage == null) {
                         System.out.println("Damage is null, skipping card. ");
@@ -366,17 +371,14 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
             System.out.println("playerTwoCard: " + playerTwoCard);
             System.out.println("playerTwoCard.attacks: " + playerTwoCard.attacks);
-            if (playerTwoCard.attacks == null)
-            {
+            if (playerTwoCard.attacks == null) {
                 System.out.println("No attacks, skipping card. ");
                 playerTwoCard = playerOneDetailedCards.get(playerOneCardNumber++);
                 Picasso.get().load(playerTwoCard.image + "/low.jpg")
                         .resize(200, 400)
                         .into(playerOneImageView);
                 battleCounterP2++;
-            }
-            else
-            {
+            } else {
                 for (Attack attack : playerTwoCard.attacks) {
                     if (attack.damage == null) {
                         System.out.println("Damage is null, skipping card. ");
@@ -395,7 +397,6 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
             }
-
         } while (playerOneHP > 0 && playerTwoHP > 0);
 
         // Determine the winner
@@ -403,19 +404,27 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         if (playerOneHP <= 0 && playerTwoHP <= 0) {
             winner = "It's a draw!";
             System.out.println(winner);
-            System.out.println(battleCounterP1);
-            battleCounterP1++;
-            battleCounterP2++;
-        } else if (playerOneHP >= 1 && playerTwoHP < 1) {
+        } else if (playerOneHP >= 1 && playerTwoHP <= 0) {
             winner = "Player one wins!";
             System.out.println(winner);
-            battleCounterP1++;
-            battleCounterP2++;
-        } else if (playerTwoHP >= 1 && playerTwoHP < 1) {
+        } else if (playerTwoHP >= 1 && playerOneHP <= 0) {
             winner = "Player Two wins!";
             System.out.println(winner);
-            battleCounterP1++;
-            battleCounterP2++;
+        } else {
+            // Handle the case where the loop exited but none of the above conditions were met
+            winner = "Unexpected result!";
+            System.out.println(winner);
         }
+
+        System.out.println("Before incrementing counters:");
+        System.out.println("Battle counters: " + battleCounterP1 + ", " + battleCounterP2);
+
+        // Increment the counters
+        battleCounterP1++;
+        battleCounterP2++;
+
+        System.out.println("After incrementing counters:");
+        System.out.println("Battle counters: " + battleCounterP1 + ", " + battleCounterP2);
+        System.out.println("Winner: " + winner);
     }
 }
