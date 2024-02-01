@@ -39,6 +39,8 @@ public class GameActivity extends AppCompatActivity {
     List<EveryCards> playerOneCards;
     List<EveryCards> playerTwoCards;
     List<Card> detailedCards;
+    ImageView playerOneImageView;
+    ImageView playerTwoImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +67,7 @@ public class GameActivity extends AppCompatActivity {
                     @Override
                     public void onCardsReceived(List<Card> receivedCards) {
                         // Now that you have detailedCards, you can pass it to layoutCards
-                        layoutCards(receivedCards);
+                        layoutCards(0,0);
                         battleCards();
                     }
 
@@ -88,6 +90,8 @@ public class GameActivity extends AppCompatActivity {
     // Initialize GUI components (if any)
     private void initGui() {
         // Add initialization code for GUI components if needed
+        playerOneImageView = findViewById(R.id.iv_playerOneCard);
+        playerTwoImageView = findViewById(R.id.iv_playerTwoCard);
     }
 
     // Fetch all cards from the API
@@ -114,59 +118,29 @@ public class GameActivity extends AppCompatActivity {
     }
 
     // Display the card images in the layout
-    private void layoutCards(List<Card> detailedCards) {
-        System.out.println("\n\nStarting layoutCards method! \n\n");
-        // LinearLayOut Setup
-        LinearLayout linearLayout = new LinearLayout(this);
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
-
-        linearLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT)
-        );
-        int numberOfCardsToDisplay = 10;
-
+    private void layoutCards(int playerOneId, int playerTwoId) {
         if (detailedCards == null)
         {
             System.err.println("\ndetailedCards is null. Returning!\n");
             return;
         }
         else {
+            Card playerOneCard = detailedCards.get(playerOneId);
+            // Loading the image using Picasso library and appending "/low.jpg" to the URL
+            Picasso.get().load(playerOneCard.getImageUrl() + "/low.jpg")
+                    .resize(200, 400)
+                    .into(playerOneImageView);
+
+            Card playerTwoCard = detailedCards.get(playerTwoId);
+            // Loading the image using Picasso library and appending "/low.jpg" to the URL
+            Picasso.get().load(playerTwoCard.getImageUrl() + "/low.jpg")
+                    .resize(200, 400)
+                    .into(playerTwoImageView);
+
+            System.out.println("Picasso loaded!");
             System.out.println("\ndetailedCards is populated!\n");
-            for (int i = 0; i < numberOfCardsToDisplay; i++) {
-                System.out.println("Starting loop!");
-                //ImageView Setup
-                ImageView imageView = new ImageView(this);
 
-                // Setting image resource
-                System.out.println("Getting detailcards" + detailedCards.get(i));
-                System.out.println("Getting detailcards index: " + i);
-                Card card = detailedCards.get(i);
-
-                System.out.println("Layout Card: " + card.name);
-                System.out.println("Layout Card URL: " + card.image);
-                System.out.println("Picasso loading!");
-
-                // Loading the image using Picasso library and appending "/low.jpg" to the URL
-                Picasso.get().load(card.getImageUrl() + "/low.jpg")
-                        .resize(500, 800)
-                        .into(imageView);
-                System.out.println("Picasso loaded!");
-
-                // setting image position
-                imageView.setLayoutParams(new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT)
-                );
-
-                //adding view to layout
-                linearLayout.addView(imageView);
-            }
         }
-
-        // make visible to program
-        setContentView(linearLayout);
-        System.out.println("\ndetailedCards is finished!\n");
     }
 
     // Fetch detailed information for each card
@@ -191,8 +165,8 @@ public class GameActivity extends AppCompatActivity {
 
                 System.out.println("detailedCard category: " + detailedCard.category);
                 System.out.println("Adding card: " + detailedCard);
-                detailedCards.add(detailedCard);
 
+                detailedCards.add(detailedCard);
 
                 System.out.println("Card: " + detailedCard.name);
                 System.out.println("Card URL: " + detailedCard.getImageUrl());
@@ -272,14 +246,16 @@ public class GameActivity extends AppCompatActivity {
         int playerOneHP = playerOneCard.hp;
         int playerTwoHP = playerOneCard.hp;;
 
+        int playerOneCardNumber = 0;
+        int playerTwoCardNumber = 0;
         // Simulate the battle
         while (playerOneHP > 0 && playerTwoHP > 0) {
-            int i = 0;
             for (Attack attack : playerOneCard.attacks) {
                 if (attack.damage == null)
                 {
                     System.out.println("Damage is null, skipping card. ");
-                    playerOneCard = detailedCards.get(i++);  // Change this based on your logic
+                    playerOneCard = detailedCards.get(playerOneCardNumber++);
+                    layoutCards(playerOneCardNumber, playerTwoCardNumber);// Change this based on your logic
                 }
                 else if (playerTwoHP > 0)  {
                     String cleanedDamageValue = attack.damage.trim()
@@ -296,7 +272,8 @@ public class GameActivity extends AppCompatActivity {
                 if (attack.damage == null)
                 {
                     System.out.println("Damage is null, skipping card. ");
-                    playerTwoCard = detailedCards.get(i++);  // Change this based on your logic
+                    playerTwoCard = detailedCards.get(playerTwoCardNumber++);  // Change this based on your logic
+                    layoutCards(playerOneCardNumber, playerTwoCardNumber);
                 }
                 else if (playerOneHP > 0) {
                     String cleanedDamageValue = attack.damage.trim()
