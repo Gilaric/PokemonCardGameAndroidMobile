@@ -66,6 +66,7 @@ public class GameActivity extends AppCompatActivity {
                     public void onCardsReceived(List<Card> receivedCards) {
                         // Now that you have detailedCards, you can pass it to layoutCards
                         layoutCards(receivedCards);
+                        battleCards();
                     }
 
                     @Override
@@ -123,6 +124,7 @@ public class GameActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT)
         );
+        int numberOfCardsToDisplay = 10;
 
         if (detailedCards == null)
         {
@@ -131,19 +133,25 @@ public class GameActivity extends AppCompatActivity {
         }
         else {
             System.out.println("\ndetailedCards is populated!\n");
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < numberOfCardsToDisplay; i++) {
+                System.out.println("Starting loop!");
                 //ImageView Setup
                 ImageView imageView = new ImageView(this);
 
                 // Setting image resource
+                System.out.println("Getting detailcards" + detailedCards.get(i));
+                System.out.println("Getting detailcards index: " + i);
                 Card card = detailedCards.get(i);
 
-                System.out.println("Card: " + card.name);
-                System.out.println("Card URL: " + card.image);
+                System.out.println("Layout Card: " + card.name);
+                System.out.println("Layout Card URL: " + card.image);
+                System.out.println("Picasso loading!");
+
                 // Loading the image using Picasso library and appending "/low.jpg" to the URL
                 Picasso.get().load(card.getImageUrl() + "/low.jpg")
-                        .resize(800, 1100)
+                        .resize(500, 800)
                         .into(imageView);
+                System.out.println("Picasso loaded!");
 
                 // setting image position
                 imageView.setLayoutParams(new LinearLayout.LayoutParams(
@@ -158,6 +166,7 @@ public class GameActivity extends AppCompatActivity {
 
         // make visible to program
         setContentView(linearLayout);
+        System.out.println("\ndetailedCards is finished!\n");
     }
 
     // Fetch detailed information for each card
@@ -180,7 +189,10 @@ public class GameActivity extends AppCompatActivity {
                 // Parse the detailed card information using Gson
                 Card detailedCard = new Gson().fromJson(response, Card.class);
 
+                System.out.println("detailedCard category: " + detailedCard.category);
+                System.out.println("Adding card: " + detailedCard);
                 detailedCards.add(detailedCard);
+
 
                 System.out.println("Card: " + detailedCard.name);
                 System.out.println("Card URL: " + detailedCard.getImageUrl());
@@ -239,46 +251,80 @@ public class GameActivity extends AppCompatActivity {
     }
 
     // TODO: Implement the logic to get stats of 1 card for each player in the battleCards method
-    /*
-    public void battleCards() {
 
-        if (playerOneCards.size() < 1 || playerTwoCards.size() < 1) {
+    public void battleCards() {
+        System.out.println("\n\nStarting battleCards()\n\n");
+
+        if (playerOneCards.size() <= 1 || playerTwoCards.size() <= 1) {
             // Ensure both players have at least one card
             return;
         }
 
         // Assume we are battling the first card of each player for simplicity
         Card playerOneCard = detailedCards.get(0);  // Change this based on your logic
-        Card playerTwoCard = detailedCards.get(1);  // Change this based on your logic
+        Card playerTwoCard = detailedCards.get(0);  // Change this based on your logic
 
-        // Extract attack and HP stats
-        int playerOneAttack = playerOneCard.getAttack();
-        int playerTwoAttack = playerTwoCard.getAttack();
+        int playerOneAttack = 0;
+        int playerTwoAttack = 0;
 
-        int playerOneHP = playerOneCard.getHP();
-        int playerTwoHP = playerTwoCard.getHP();
+        int newAttackDamageValue = 0;
+
+        int playerOneHP = playerOneCard.hp;
+        int playerTwoHP = playerOneCard.hp;;
 
         // Simulate the battle
         while (playerOneHP > 0 && playerTwoHP > 0) {
-            // Player One attacks Player Two
-            playerTwoHP -= playerOneAttack;
+            int i = 0;
+            for (Attack attack : playerOneCard.attacks) {
+                if (attack.damage == null)
+                {
+                    System.out.println("Damage is null, skipping card. ");
+                    playerOneCard = detailedCards.get(i++);  // Change this based on your logic
+                }
+                else if (playerTwoHP > 0)  {
+                    String cleanedDamageValue = attack.damage.trim()
+                            .replaceAll("[-+]", "");
+                    newAttackDamageValue = Integer.parseInt(cleanedDamageValue);
+                    playerOneAttack = newAttackDamageValue;
+                    System.out.println(playerOneCard.name + " Assigning attackValue " + playerOneAttack);
+                    playerTwoHP -= playerOneAttack;
+                    System.out.println("playerTwoHP after attack" + playerTwoHP);
+                }
+            }
 
-            // Player Two attacks Player One
-            playerOneHP -= playerTwoAttack;
+            for (Attack attack : playerTwoCard.attacks) {
+                if (attack.damage == null)
+                {
+                    System.out.println("Damage is null, skipping card. ");
+                    playerTwoCard = detailedCards.get(i++);  // Change this based on your logic
+                }
+                else if (playerOneHP > 0) {
+                    String cleanedDamageValue = attack.damage.trim()
+                            .replaceAll("[-+]", "");
+                    newAttackDamageValue = Integer.parseInt(cleanedDamageValue);
+                    playerTwoAttack = newAttackDamageValue;
+                    System.out.println(playerTwoCard.name + " Assigning attackValue " + playerTwoAttack);
+                    playerOneHP -= playerTwoAttack;
+                    System.out.println("playerOneHP" + playerOneHP);
+                }
+            }
         }
 
         // Determine the winner
         String winner;
         if (playerOneHP <= 0 && playerTwoHP <= 0) {
             winner = "It's a draw!";
-        } else if (playerOneHP <= 0) {
+        }
+        else if (playerOneHP <= 0) {
             winner = "Player Two wins!";
-        } else {
+            System.out.println(winner);
+        }
+        else {
             winner = "Player One wins!";
+            System.out.println(winner);
         }
 
         // Display the result
         Toast.makeText(this, winner, Toast.LENGTH_LONG).show();
     }
-    */
 }
