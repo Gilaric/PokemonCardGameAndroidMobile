@@ -148,13 +148,13 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     // Check and call the callback when all detailed cards are fetched
-    private void checkAndCallback(int[] cardsProcessed, DetailedCardsCallback callback) {
-        System.out.println("cardsProcessed: "+cardsProcessed[0]);
+    private void checkAndCallback(DetailedCardsCallback callback) {
+        cardsProcessed[0]++;
         int totalCards = 20;
-        if (cardsProcessed[0] == 20) {
+        if (cardsProcessed[0] == 2 * 10) {
             callback.onCardsReceived(playerOneDetailedCards, playerTwoDetailedCards);
             System.out.println("Fetched all " + totalCards + " cards!");
-        } else {
+        } else if (cardsProcessed[0] <= 2 * 9) {
             // If not all cards are fetched, continue fetching the remaining cards
             System.out.println("Fetching remaining cards...");
             getCard(callback);
@@ -167,14 +167,21 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         List<EveryCards> everyPlayerOneCards = new ArrayList<>(playerOneCards);
         List<EveryCards> everyPlayerTwoCards = new ArrayList<>(playerTwoCards);
 
-        // Initialize detailedCards list
-        playerOneDetailedCards = new ArrayList<>();
-        playerTwoDetailedCards = new ArrayList<>();
-
         int totalCards = everyPlayerOneCards.size() + everyPlayerTwoCards.size();  // Total number of cards
         System.out.println("everyPlayerOneCards: " + everyPlayerOneCards.size());
 
-        for (EveryCards card : everyPlayerOneCards) {
+        // Fetch cards for player one
+        fetchCardsDetails(playerOneDetailedCards, everyPlayerOneCards, callback);
+
+        // Fetch cards for player two
+        fetchCardsDetails(playerTwoDetailedCards, everyPlayerTwoCards, callback);
+    }
+
+    // Helper method to fetch card details for a specific player
+    private void fetchCardsDetails(List<Card> playerDetailedCards, List<EveryCards> playerCards,
+                                   DetailedCardsCallback callback) {
+        if (!playerCards.isEmpty()) {
+            EveryCards card = playerCards.remove(0);
             String cardId = card.id;
 
             String url = "https://api.tcgdex.net/v2/en/cards/" + cardId;
@@ -183,66 +190,32 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                 // Parse the detailed card information using Gson
                 Card detailedCard = new Gson().fromJson(response, Card.class);
 
-                System.out.println("P1 detailedCard category: " + detailedCard.category);
+                System.out.println("DetailedCard category: " + detailedCard.category);
 
                 // Check if the category is "Pokemon"
-                if ("Pokemon".equals(detailedCard.category) && cardsProcessed[0] <= 20) {
-                    System.out.println("Adding card to P1 list: " + detailedCard);
-                    playerOneDetailedCards.add(detailedCard);
-                    System.out.println("P1 Card: " + detailedCard.name);
-                    System.out.println("P1 Card URL: " + detailedCard.image);
-
-                    cardsProcessed[0]++;
-                    System.out.println("P1 cardsProcessed: "+cardsProcessed[0]);
-                }
-                else {
-                    System.out.println("Not adding to P1 list. Pokemon card category: "
-                            + detailedCard.category);
+                if ("Pokemon".equals(detailedCard.category)) {
+                    System.out.println("Adding card: " + detailedCard);
+                    playerDetailedCards.add(detailedCard);
+                    System.out.println("Card: " + detailedCard.name);
+                    System.out.println("Card URL: " + detailedCard.image);
                 }
 
                 // Check and call the callback
-                checkAndCallback(cardsProcessed, callback);
+                checkAndCallback(callback);
+
+                // Continue fetching the next card
+                fetchCardsDetails(playerDetailedCards, playerCards, callback);
 
             }, error -> {
                 Toast.makeText(this, error.toString(), Toast.LENGTH_LONG).show();
+                // Continue fetching the next card in case of an error
+                fetchCardsDetails(playerDetailedCards, playerCards, callback);
             });
 
             requestQueue.add(request);
-        }
-
-        for (EveryCards card : everyPlayerTwoCards) {
-            String cardId = card.id;
-
-            String url = "https://api.tcgdex.net/v2/en/cards/" + cardId;
-
-            StringRequest request = new StringRequest(Request.Method.GET, url, response -> {
-                // Parse the detailed card information using Gson
-                Card detailedCard = new Gson().fromJson(response, Card.class);
-
-                System.out.println("P2 detailedCard category: " + detailedCard.category);
-
-                // Check if the category is "Pokemon"
-                if ("Pokemon".equals(detailedCard.category ) && cardsProcessed[0] <= 20) {
-                    System.out.println("Adding card to P2 list : " + detailedCard);
-                    playerTwoDetailedCards.add(detailedCard);
-                    System.out.println("P2 Card: " + detailedCard.name);
-                    System.out.println("P2 Card URL: " + detailedCard.image);
-
-                    cardsProcessed[0]++;
-                    System.out.println("P2 cardsProcessed: "+cardsProcessed[0]);
-                }
-                else {
-                    System.out.println("Not adding to list P2. Pokemon card category: "
-                            + detailedCard.category);
-                }
-
-                // Check and call the callback
-                checkAndCallback(cardsProcessed, callback);
-
-            }, error -> {
-                Toast.makeText(this, error.toString(), Toast.LENGTH_LONG).show();
-            });
-            requestQueue.add(request);
+        } else {
+            // All cards for the current player are processed
+            checkAndCallback(callback);
         }
     }
 
@@ -292,14 +265,14 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
         if (playerOneDetailedCards.size() <= 0 || playerTwoDetailedCards.size() <= 0) {
             // Ensure both players have at least one card
+            System.out.println("playerOneDetailedCards size: "+playerOneDetailedCards.size());
+            System.out.println("playerTwoDetailedCards size: "+playerTwoDetailedCards.size());
             System.out.println("Not enough cards to battle.");
-            return;
         }
 
         if (playerOneCardNumber >= playerOneDetailedCards.size() || playerTwoCardNumber >= playerTwoDetailedCards.size()) {
             // No more cards to battle
             System.out.println("No more cards to battle. The game has ended.");
-            return;
         }
 
         // Assume we are battling the first card of each player for simplicity
