@@ -6,7 +6,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,8 +41,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     List<EveryCards> cards;
     List<EveryCards> playerOneCards;
     List<EveryCards> playerTwoCards;
-    List<Card> playerOneDetailedCards;
-    List<Card> playerTwoDetailedCards;
+    List<Card> playerOneDetailedCards = new ArrayList<>();;
+    List<Card> playerTwoDetailedCards  = new ArrayList<>();;
     ImageView playerOneImageView;
     ImageView playerTwoImageView;
     Button btn_next_battle;
@@ -52,8 +51,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     TextView tv_playerTwo_score_counter;
     int playerOneCardNumber;
     int playerTwoCardNumber;
-    int battleCounterP1;
-    int battleCounterP2;
+    int[] cardsProcessed = {0};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +83,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                     public void onCardsReceived(List<Card> playerOneCards, List<Card> playerTwoCards) {
                         // Now that you have detailedCards for both players, you can use them
                         // in your logic, such as displaying images and battling cards.
-                        System.out.println("Battle counters: " + battleCounterP1 + ", " + battleCounterP2);
+                        System.out.println("Battle counters: " + playerOneCardNumber + ", " + playerTwoCardNumber);
                         battleCards();
 
                     }
@@ -149,36 +147,19 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         requestQueue.add(request);
     }
 
-    public void getCardImage()
-    {
-
+    // Check and call the callback when all detailed cards are fetched
+    private void checkAndCallback(int[] cardsProcessed, DetailedCardsCallback callback) {
+        System.out.println("cardsProcessed: "+cardsProcessed[0]);
+        int totalCards = 20;
+        if (cardsProcessed[0] == 20) {
+            callback.onCardsReceived(playerOneDetailedCards, playerTwoDetailedCards);
+            System.out.println("Fetched all " + totalCards + " cards!");
+        } else {
+            // If not all cards are fetched, continue fetching the remaining cards
+            System.out.println("Fetching remaining cards...");
+            getCard(callback);
+        }
     }
-
-/*    // Display the card images in the layout
-    private void layoutCards(int playerOneId, int playerTwoId) {
-        if (detailedCards == null)
-        {
-            System.err.println("\ndetailedCards is null. Returning!\n");
-            return;
-        }
-        else {
-            Card playerOneCard = detailedCards.get(playerOneId);
-            // Loading the image using Picasso library and appending "/low.jpg" to the URL
-            Picasso.get().load(playerOneCard.getImageUrl() + "/low.jpg")
-                    .resize(200, 400)
-                    .into(playerOneImageView);
-
-            Card playerTwoCard = detailedCards.get(playerTwoId);
-            // Loading the image using Picasso library and appending "/low.jpg" to the URL
-            Picasso.get().load(playerTwoCard.getImageUrl() + "/low.jpg")
-                    .resize(200, 400)
-                    .into(playerTwoImageView);
-
-            System.out.println("Picasso loaded!");
-            System.out.println("\ndetailedCards is populated!\n");
-
-        }
-    }*/
 
     // Fetch detailed information for each card
     private void getCard(DetailedCardsCallback callback) {
@@ -190,7 +171,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         playerOneDetailedCards = new ArrayList<>();
         playerTwoDetailedCards = new ArrayList<>();
 
-        int[] cardsProcessed = {0};  // Using an array to make it effectively final
+        int totalCards = everyPlayerOneCards.size() + everyPlayerTwoCards.size();  // Total number of cards
+        System.out.println("everyPlayerOneCards: " + everyPlayerOneCards.size());
 
         for (EveryCards card : everyPlayerOneCards) {
             String cardId = card.id;
@@ -201,23 +183,25 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                 // Parse the detailed card information using Gson
                 Card detailedCard = new Gson().fromJson(response, Card.class);
 
-                System.out.println("detailedCard category: " + detailedCard.category);
-                System.out.println("Adding card: " + detailedCard);
+                System.out.println("P1 detailedCard category: " + detailedCard.category);
 
-                playerOneDetailedCards.add(detailedCard);
+                // Check if the category is "Pokemon"
+                if ("Pokemon".equals(detailedCard.category) && cardsProcessed[0] <= 20) {
+                    System.out.println("Adding card to P1 list: " + detailedCard);
+                    playerOneDetailedCards.add(detailedCard);
+                    System.out.println("P1 Card: " + detailedCard.name);
+                    System.out.println("P1 Card URL: " + detailedCard.image);
 
-                System.out.println("Card: " + detailedCard.name);
-                System.out.println("Card URL: " + detailedCard.image);
-
-                cardsProcessed[0]++;
-                System.out.println(cardsProcessed[0]);
-
-                // Check the condition when all detailed cards are fetched
-                if (cardsProcessed[0] == everyPlayerOneCards.size() + everyPlayerTwoCards.size()) {
-                    System.out.println("Callbacking");
-                    // Call the callback when all detailed cards are fetched
-                    callback.onCardsReceived(playerOneDetailedCards, playerTwoDetailedCards);
+                    cardsProcessed[0]++;
+                    System.out.println("P1 cardsProcessed: "+cardsProcessed[0]);
                 }
+                else {
+                    System.out.println("Not adding to P1 list. Pokemon card category: "
+                            + detailedCard.category);
+                }
+
+                // Check and call the callback
+                checkAndCallback(cardsProcessed, callback);
 
             }, error -> {
                 Toast.makeText(this, error.toString(), Toast.LENGTH_LONG).show();
@@ -235,32 +219,32 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                 // Parse the detailed card information using Gson
                 Card detailedCard = new Gson().fromJson(response, Card.class);
 
-                System.out.println("detailedCard category: " + detailedCard.category);
-                System.out.println("Adding card: " + detailedCard);
+                System.out.println("P2 detailedCard category: " + detailedCard.category);
 
-                playerTwoDetailedCards.add(detailedCard);
+                // Check if the category is "Pokemon"
+                if ("Pokemon".equals(detailedCard.category ) && cardsProcessed[0] <= 20) {
+                    System.out.println("Adding card to P2 list : " + detailedCard);
+                    playerTwoDetailedCards.add(detailedCard);
+                    System.out.println("P2 Card: " + detailedCard.name);
+                    System.out.println("P2 Card URL: " + detailedCard.image);
 
-                System.out.println("Card: " + detailedCard.name);
-                System.out.println("Card URL: " + detailedCard.image);
-
-                cardsProcessed[0]++;
-                System.out.println(cardsProcessed[0]);
-
-                // Check the condition when all detailed cards are fetched
-                if (cardsProcessed[0] == everyPlayerOneCards.size() + everyPlayerTwoCards.size()) {
-                    System.out.println("Callbacking");
-                    // Call the callback when all detailed cards are fetched
-                    callback.onCardsReceived(playerOneDetailedCards, playerTwoDetailedCards);
+                    cardsProcessed[0]++;
+                    System.out.println("P2 cardsProcessed: "+cardsProcessed[0]);
                 }
+                else {
+                    System.out.println("Not adding to list P2. Pokemon card category: "
+                            + detailedCard.category);
+                }
+
+                // Check and call the callback
+                checkAndCallback(cardsProcessed, callback);
 
             }, error -> {
                 Toast.makeText(this, error.toString(), Toast.LENGTH_LONG).show();
             });
-
             requestQueue.add(request);
         }
     }
-
 
     // Select random cards for two players
     public void getTenRandomCards() {
@@ -312,17 +296,17 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        if (battleCounterP1 >= playerOneDetailedCards.size() || battleCounterP2 >= playerTwoDetailedCards.size()) {
+        if (playerOneCardNumber >= playerOneDetailedCards.size() || playerTwoCardNumber >= playerTwoDetailedCards.size()) {
             // No more cards to battle
             System.out.println("No more cards to battle. The game has ended.");
             return;
         }
 
         // Assume we are battling the first card of each player for simplicity
-        System.out.println("\nbattleCounterP1 index: " + battleCounterP1 +"\n");
-        System.out.println("\nbattleCounterP2 index: " + battleCounterP2 +"\n");
-        Card playerOneCard = playerOneDetailedCards.get(battleCounterP1);  // Change this based on your logic
-        Card playerTwoCard = playerTwoDetailedCards.get(battleCounterP2);  // Change this based on your logic
+        System.out.println("\nplayerOneCardNumber index: " + playerOneCardNumber +"\n");
+        System.out.println("\nplayerTwoCardNumber index: " + playerTwoCardNumber +"\n");
+        Card playerOneCard = playerOneDetailedCards.get(playerOneCardNumber);  // Change this based on your logic
+        Card playerTwoCard = playerTwoDetailedCards.get(playerTwoCardNumber);  // Change this based on your logic
 
         Picasso.get().load(playerOneCard.image + "/low.jpg")
                 .resize(200, 400)
@@ -349,7 +333,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                 Picasso.get().load(playerOneCard.image + "/low.jpg")
                         .resize(200, 400)
                         .into(playerOneImageView);
-                battleCounterP1++;
+                System.out.println("After skipping card:");
+                System.out.println("PlayerCard counters:" + playerOneCardNumber + ", " + playerTwoCardNumber);
             } else {
                 for (Attack attack : playerOneCard.attacks) {
                     if (attack.damage == null) {
@@ -358,9 +343,10 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                         Picasso.get().load(playerOneCard.image + "/low.jpg")
                                 .resize(200, 400)
                                 .into(playerOneImageView);
-                        battleCounterP1++;
+                        System.out.println("After skipping card:");
+                        System.out.println("PlayerCard counters:" + playerOneCardNumber + ", " + playerTwoCardNumber);
                     } else if (playerTwoHP > 0) {
-                        String cleanedDamageValue = attack.damage.trim().replaceAll("[-+]", "");
+                        String cleanedDamageValue = attack.damage.trim().replaceAll("[-+×x]", "");
                         newAttackDamageValue = Integer.parseInt(cleanedDamageValue);
                         playerOneAttack = newAttackDamageValue;
                         System.out.println(playerOneCard.name + " Assigning attackValue " + playerOneAttack);
@@ -375,11 +361,12 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             System.out.println("playerTwoCard.attacks: " + playerTwoCard.attacks);
             if (playerTwoCard.attacks == null) {
                 System.out.println("No attacks, skipping card. ");
-                playerTwoCard = playerOneDetailedCards.get(playerOneCardNumber++);
+                playerTwoCard = playerOneDetailedCards.get(playerTwoCardNumber++);
                 Picasso.get().load(playerTwoCard.image + "/low.jpg")
                         .resize(200, 400)
                         .into(playerOneImageView);
-                battleCounterP2++;
+                System.out.println("After skipping card:");
+                System.out.println("PlayerCard counters:" + playerOneCardNumber + ", " + playerTwoCardNumber);
             } else {
                 for (Attack attack : playerTwoCard.attacks) {
                     if (attack.damage == null) {
@@ -388,9 +375,11 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                         Picasso.get().load(playerTwoCard.image + "/low.jpg")
                                 .resize(200, 400)
                                 .into(playerTwoImageView);
-                        battleCounterP2++;
+                        playerTwoCardNumber++;
+                        System.out.println("After skipping card:");
+                        System.out.println("PlayerCard counters:" + playerOneCardNumber + ", " + playerTwoCardNumber);
                     } else if (playerOneHP > 0) {
-                        String cleanedDamageValue = attack.damage.trim().replaceAll("[-+]", "");
+                        String cleanedDamageValue = attack.damage.trim().replaceAll("[-+×x]", "");
                         newAttackDamageValue = Integer.parseInt(cleanedDamageValue);
                         playerTwoAttack = newAttackDamageValue;
                         System.out.println(playerTwoCard.name + " Assigning attackValue: " + playerTwoAttack);
@@ -419,14 +408,14 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         System.out.println("Before incrementing counters:");
-        System.out.println("Battle counters: " + battleCounterP1 + ", " + battleCounterP2);
+        System.out.println("PlayerCard counters: " + playerOneCardNumber + ", " + playerTwoCardNumber);
 
         // Increment the counters
-        battleCounterP1++;
-        battleCounterP2++;
+        playerOneCardNumber++;
+        playerTwoCardNumber++;
 
         System.out.println("After incrementing counters:");
-        System.out.println("Battle counters: " + battleCounterP1 + ", " + battleCounterP2);
+        System.out.println("PlayerCard counters:" + playerOneCardNumber + ", " + playerTwoCardNumber);
         System.out.println("Winner: " + winner);
     }
 }
