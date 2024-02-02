@@ -86,7 +86,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                         // Now that you have detailedCards for both players, you can use them
                         // in your logic, such as displaying images and battling cards.
                         System.out.println("Battle counters: " + battleCounterP1 + ", " + battleCounterP2);
-                        battleCards(battleCounterP1, battleCounterP2);
+                        battleCards();
 
                     }
 
@@ -114,7 +114,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        battleCards(battleCounterP1, battleCounterP2);
+        battleCards();
     }
 
     // Initialize GUI components (if any)
@@ -303,7 +303,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
     // TODO: Implement the logic to get stats of 1 card for each player in the battleCards method
 
-    public void battleCards(int battleCounterP1, int battleCounterP2) {
+    public void battleCards() {
         System.out.println("\n\nStarting battleCards()\n\n");
 
         if (playerOneDetailedCards.size() <= 0 || playerTwoDetailedCards.size() <= 0) {
@@ -319,6 +319,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         // Assume we are battling the first card of each player for simplicity
+        System.out.println("\nbattleCounterP1 index: " + battleCounterP1 +"\n");
+        System.out.println("\nbattleCounterP2 index: " + battleCounterP2 +"\n");
         Card playerOneCard = playerOneDetailedCards.get(battleCounterP1);  // Change this based on your logic
         Card playerTwoCard = playerTwoDetailedCards.get(battleCounterP2);  // Change this based on your logic
 
