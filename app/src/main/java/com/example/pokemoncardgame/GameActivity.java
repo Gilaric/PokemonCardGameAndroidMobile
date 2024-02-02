@@ -52,8 +52,6 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     TextView tv_playerTwo_score_counter;
     int playerOneCardNumber;
     int playerTwoCardNumber;
-    int battleCounterP1;
-    int battleCounterP2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +85,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                     public void onCardsReceived(List<Card> playerOneCards, List<Card> playerTwoCards) {
                         // Now that you have detailedCards for both players, you can use them
                         // in your logic, such as displaying images and battling cards.
-                        battleCards(battleCounterP1, battleCounterP2);
+                        battleCards();
                     }
 
                     @Override
@@ -114,7 +112,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        battleCards(battleCounterP1, battleCounterP2);
+        battleCards();
     }
 
     // Initialize GUI components (if any)
@@ -303,7 +301,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
     // TODO: Implement the logic to get stats of 1 card for each player in the battleCards method
 
-    public void battleCards(int battleCounterP1, int battleCounterP2) {
+    public void battleCards() {
         System.out.println("\n\nStarting battleCards()\n\n");
 
         if (playerOneCards.size() <= 1 || playerTwoCards.size() <= 1) {
@@ -312,8 +310,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         // Assume we are battling the first card of each player for simplicity
-        Card playerOneCard = playerOneDetailedCards.get(battleCounterP1);  // Change this based on your logic
-        Card playerTwoCard = playerTwoDetailedCards.get(battleCounterP2);  // Change this based on your logic
+        Card playerOneCard = playerOneDetailedCards.get(playerOneCardNumber);  // Change this based on your logic
+        Card playerTwoCard = playerTwoDetailedCards.get(playerOneCardNumber);  // Change this based on your logic
 
         Picasso.get().load(playerOneCard.image + "/low.jpg")
                 .resize(200, 400)
@@ -337,23 +335,23 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             if (playerOneCard.attacks == null)
             {
                 System.out.println("No attacks, skipping card. ");
-                playerOneCard = playerOneDetailedCards.get(playerOneCardNumber++);
+                playerOneCardNumber++;
+                playerOneCard = playerOneDetailedCards.get(playerOneCardNumber);
                 Picasso.get().load(playerOneCard.image + "/low.jpg")
                         .resize(200, 400)
                         .into(playerOneImageView);
-                battleCounterP1++;
             }
             else {
                 for (Attack attack : playerOneCard.attacks) {
                     if (attack.damage == null) {
                         System.out.println("Damage is null, skipping card. ");
-                        playerOneCard = playerOneDetailedCards.get(playerOneCardNumber++);
+                        playerOneCardNumber++;
+                        playerOneCard = playerOneDetailedCards.get(playerOneCardNumber);
                         Picasso.get().load(playerOneCard.image + "/low.jpg")
                                 .resize(200, 400)
                                 .into(playerOneImageView);
-                        battleCounterP1++;
                     } else if (playerTwoHP > 0) {
-                        String cleanedDamageValue = attack.damage.trim().replaceAll("[-+]", "");
+                        String cleanedDamageValue = attack.damage.trim().replaceAll("[-+x×]", "");
                         newAttackDamageValue = Integer.parseInt(cleanedDamageValue);
                         playerOneAttack = newAttackDamageValue;
                         System.out.println(playerOneCard.name + " Assigning attackValue " + playerOneAttack);
@@ -369,24 +367,25 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             if (playerTwoCard.attacks == null)
             {
                 System.out.println("No attacks, skipping card. ");
-                playerTwoCard = playerOneDetailedCards.get(playerOneCardNumber++);
+                playerTwoCardNumber++;
+                playerTwoCard = playerOneDetailedCards.get(playerTwoCardNumber);
                 Picasso.get().load(playerTwoCard.image + "/low.jpg")
                         .resize(200, 400)
                         .into(playerOneImageView);
-                battleCounterP2++;
+
             }
             else
             {
                 for (Attack attack : playerTwoCard.attacks) {
                     if (attack.damage == null) {
                         System.out.println("Damage is null, skipping card. ");
-                        playerTwoCard = playerTwoDetailedCards.get(playerTwoCardNumber++);  // Change this based on your logic
+                        playerTwoCardNumber++;
+                        playerTwoCard = playerTwoDetailedCards.get(playerTwoCardNumber);  // Change this based on your logic
                         Picasso.get().load(playerTwoCard.image + "/low.jpg")
                                 .resize(200, 400)
                                 .into(playerTwoImageView);
-                        battleCounterP2++;
                     } else if (playerOneHP > 0) {
-                        String cleanedDamageValue = attack.damage.trim().replaceAll("[-+]", "");
+                        String cleanedDamageValue = attack.damage.trim().replaceAll("[-+x×]", "");
                         newAttackDamageValue = Integer.parseInt(cleanedDamageValue);
                         playerTwoAttack = newAttackDamageValue;
                         System.out.println(playerTwoCard.name + " Assigning attackValue: " + playerTwoAttack);
@@ -403,19 +402,18 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         if (playerOneHP <= 0 && playerTwoHP <= 0) {
             winner = "It's a draw!";
             System.out.println(winner);
-            System.out.println(battleCounterP1);
-            battleCounterP1++;
-            battleCounterP2++;
+            playerOneCardNumber++;
+            playerTwoCardNumber++;
         } else if (playerOneHP >= 1 && playerTwoHP < 1) {
             winner = "Player one wins!";
             System.out.println(winner);
-            battleCounterP1++;
-            battleCounterP2++;
+            playerOneCardNumber++;
+            playerTwoCardNumber++;
         } else if (playerTwoHP >= 1 && playerTwoHP < 1) {
             winner = "Player Two wins!";
             System.out.println(winner);
-            battleCounterP1++;
-            battleCounterP2++;
+            playerOneCardNumber++;
+            playerTwoCardNumber++;
         }
     }
 }
